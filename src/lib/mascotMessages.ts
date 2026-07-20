@@ -20,6 +20,12 @@ export const allDoneMessages = [
   "残りゼロ!今は思いっきり休んでいいやつ!",
 ];
 
+export const timeOverMessages = [
+  "今日はここまでにしとこ!",
+  "時間内でできるのはここまでみたい",
+  "また時間があるときにやろうね",
+];
+
 export function pickRandom(messages: string[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }

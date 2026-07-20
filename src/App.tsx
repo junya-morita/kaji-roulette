@@ -15,6 +15,8 @@ function App() {
     deleteTask,
     markDone,
     markUndone,
+    setTaskEnabled,
+    setTaskCategory,
   } = useTasks();
 
   return (
@@ -38,6 +40,8 @@ function App() {
             deleteTask={deleteTask}
             markDone={markDone}
             markUndone={markUndone}
+            setTaskEnabled={setTaskEnabled}
+            setTaskCategory={setTaskCategory}
           />
         )}
       </main>

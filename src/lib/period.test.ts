@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getMonthStart, getWeekStart, isCompletedThisPeriod } from "./period";
+import {
+  getMonthStart,
+  getNthWeekdayOfMonth,
+  getScheduledDateInPeriod,
+  getWeekStart,
+  isCompletedThisPeriod,
+  isPriorityDue,
+} from "./period";
 import type { Task } from "../types";
 
 function makeTask(overrides: Partial<Task>): Task {
@@ -9,6 +16,9 @@ function makeTask(overrides: Partial<Task>): Task {
     description: "",
     category: "weekly",
     lastCompletedAt: null,
+    enabled: true,
+    estimatedMinutes: 15,
+    schedule: null,
     ...overrides,
   };
 }
@@ -89,5 +99,116 @@ describe("isCompletedThisPeriod", () => {
       lastCompletedAt: new Date(2024, 5, 30, 8, 0).toISOString(),
     });
     expect(isCompletedThisPeriod(task, now)).toBe(false);
+  });
+});
+
+describe("getNthWeekdayOfMonth", () => {
+  it("2024年7月の第3土曜日は7/20", () => {
+    const date = getNthWeekdayOfMonth(2024, 6, 3, 6);
+    expect(date?.getDate()).toBe(20);
+  });
+
+  it("2024年7月に第5土曜日は存在しないためnull", () => {
+    const date = getNthWeekdayOfMonth(2024, 6, 5, 6);
+    expect(date).toBeNull();
+  });
+});
+
+describe("getScheduledDateInPeriod", () => {
+  it("weekly: dayOfWeek指定は今週の該当曜日を返す(金曜)", () => {
+    const now = new Date(2024, 6, 24, 10, 0); // Wed
+    const task = makeTask({
+      category: "weekly",
+      schedule: { type: "dayOfWeek", dayOfWeek: 5 }, // 金曜
+    });
+    const date = getScheduledDateInPeriod(task, now);
+    expect(date?.getDate()).toBe(26);
+  });
+
+  it("monthly: dayOfMonth指定が月に存在しない場合はnull", () => {
+    const now = new Date(2024, 5, 10); // June (30日まで)
+    const task = makeTask({
+      category: "monthly",
+      schedule: { type: "dayOfMonth", dayOfMonth: 31 },
+    });
+    expect(getScheduledDateInPeriod(task, now)).toBeNull();
+  });
+
+  it("monthly: nthWeekday指定は該当日を返す", () => {
+    const now = new Date(2024, 6, 24);
+    const task = makeTask({
+      category: "monthly",
+      schedule: { type: "nthWeekday", nth: 3, dayOfWeek: 6 },
+    });
+    const date = getScheduledDateInPeriod(task, now);
+    expect(date?.getDate()).toBe(20);
+  });
+
+  it("scheduleがnullならnull", () => {
+    const now = new Date(2024, 6, 24);
+    const task = makeTask({ schedule: null });
+    expect(getScheduledDateInPeriod(task, now)).toBeNull();
+  });
+});
+
+describe("isPriorityDue", () => {
+  it("指定曜日より前はfalse", () => {
+    const before = new Date(2024, 6, 24, 10, 0); // Wed(スケジュールは金曜)
+    const task = makeTask({
+      category: "weekly",
+      schedule: { type: "dayOfWeek", dayOfWeek: 5 },
+    });
+    expect(isPriorityDue(task, before)).toBe(false);
+  });
+
+  it("指定曜日以降はtrue(同じ週内で持ち越される)", () => {
+    const onDay = new Date(2024, 6, 26, 10, 0); // Fri
+    const afterDay = new Date(2024, 6, 27, 10, 0); // Sat(見逃した翌日)
+    const task = makeTask({
+      category: "weekly",
+      schedule: { type: "dayOfWeek", dayOfWeek: 5 },
+    });
+    expect(isPriorityDue(task, onDay)).toBe(true);
+    expect(isPriorityDue(task, afterDay)).toBe(true);
+  });
+
+  it("完了済みならfalse", () => {
+    const now = new Date(2024, 6, 27, 10, 0);
+    const task = makeTask({
+      category: "weekly",
+      schedule: { type: "dayOfWeek", dayOfWeek: 5 },
+      lastCompletedAt: new Date(2024, 6, 26, 8, 0).toISOString(),
+    });
+    expect(isPriorityDue(task, now)).toBe(false);
+  });
+
+  it("無効化されていればfalse", () => {
+    const now = new Date(2024, 6, 27, 10, 0);
+    const task = makeTask({
+      category: "weekly",
+      schedule: { type: "dayOfWeek", dayOfWeek: 5 },
+      enabled: false,
+    });
+    expect(isPriorityDue(task, now)).toBe(false);
+  });
+
+  it("毎月1日指定は月初以降ずっとtrue", () => {
+    const now = new Date(2024, 6, 24, 10, 0);
+    const task = makeTask({
+      category: "monthly",
+      schedule: { type: "dayOfMonth", dayOfMonth: 1 },
+    });
+    expect(isPriorityDue(task, now)).toBe(true);
+  });
+
+  it("第3土曜日指定はその日より前はfalse、以降はtrue", () => {
+    const before = new Date(2024, 6, 15, 10, 0); // Mon(第3土曜日=7/20より前)
+    const after = new Date(2024, 6, 24, 10, 0); // Wed(7/20より後)
+    const task = makeTask({
+      category: "monthly",
+      schedule: { type: "nthWeekday", nth: 3, dayOfWeek: 6 },
+    });
+    expect(isPriorityDue(task, before)).toBe(false);
+    expect(isPriorityDue(task, after)).toBe(true);
   });
 });

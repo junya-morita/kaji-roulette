@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Category, Task } from "../types";
+import type { Category, Schedule, Task } from "../types";
 import { loadTasks, saveTasks } from "../lib/storage";
 import { isCompletedThisPeriod } from "../lib/period";
 import { createDefaultTasks } from "../lib/defaultTasks";
@@ -15,7 +15,7 @@ export function useTasks() {
 
   const remaining = useMemo(() => {
     const now = new Date();
-    return tasks.filter((t) => !isCompletedThisPeriod(t, now));
+    return tasks.filter((t) => t.enabled && !isCompletedThisPeriod(t, now));
   }, [tasks]);
 
   const weeklyRemaining = useMemo(
@@ -28,7 +28,13 @@ export function useTasks() {
   );
 
   const addTask = useCallback(
-    (name: string, description: string, category: Category) => {
+    (
+      name: string,
+      description: string,
+      category: Category,
+      estimatedMinutes: number,
+      schedule: Schedule | null,
+    ) => {
       setTasks((prev) => [
         ...prev,
         {
@@ -37,6 +43,9 @@ export function useTasks() {
           description,
           category,
           lastCompletedAt: null,
+          enabled: true,
+          estimatedMinutes,
+          schedule,
         },
       ]);
     },
@@ -61,6 +70,20 @@ export function useTasks() {
     );
   }, []);
 
+  const setTaskEnabled = useCallback((id: string, enabled: boolean) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, enabled } : t)),
+    );
+  }, []);
+
+  const setTaskCategory = useCallback((id: string, category: Category) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, category, schedule: null } : t,
+      ),
+    );
+  }, []);
+
   return {
     tasks,
     remaining,
@@ -70,5 +93,7 @@ export function useTasks() {
     deleteTask,
     markDone,
     markUndone,
+    setTaskEnabled,
+    setTaskCategory,
   };
 }
