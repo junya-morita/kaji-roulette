@@ -1,11 +1,21 @@
-import type { Schedule } from "../types";
+import type { Category, Schedule } from "../types";
 
 export const WEEKDAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
 
-export function formatSchedule(schedule: Schedule | null): string | null {
+export const CATEGORY_LABELS: Record<Category, string> = {
+  weekly: "週1",
+  biweekly: "隔週",
+  monthly: "月1",
+};
+
+export function formatSchedule(
+  schedule: Schedule | null,
+  category: Category,
+): string | null {
   if (!schedule) return null;
   if (schedule.type === "dayOfWeek") {
-    return `毎週${WEEKDAY_LABELS[schedule.dayOfWeek]}曜`;
+    const prefix = category === "biweekly" ? "隔週の" : "毎週";
+    return `${prefix}${WEEKDAY_LABELS[schedule.dayOfWeek]}曜`;
   }
   if (schedule.type === "dayOfMonth") {
     return `毎月${schedule.dayOfMonth}日`;

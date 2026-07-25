@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Category, Schedule, Task } from "../types";
+import type { Task, TaskFormValues } from "../types";
 import { loadTasks, saveTasks } from "../lib/storage";
 import { isCompletedThisPeriod } from "../lib/period";
 import { createDefaultTasks } from "../lib/defaultTasks";
@@ -22,35 +22,26 @@ export function useTasks() {
     () => remaining.filter((t) => t.category === "weekly"),
     [remaining],
   );
+  const biweeklyRemaining = useMemo(
+    () => remaining.filter((t) => t.category === "biweekly"),
+    [remaining],
+  );
   const monthlyRemaining = useMemo(
     () => remaining.filter((t) => t.category === "monthly"),
     [remaining],
   );
 
-  const addTask = useCallback(
-    (
-      name: string,
-      description: string,
-      category: Category,
-      estimatedMinutes: number,
-      schedule: Schedule | null,
-    ) => {
-      setTasks((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          name,
-          description,
-          category,
-          lastCompletedAt: null,
-          enabled: true,
-          estimatedMinutes,
-          schedule,
-        },
-      ]);
-    },
-    [],
-  );
+  const addTask = useCallback((values: TaskFormValues) => {
+    setTasks((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        lastCompletedAt: null,
+        enabled: true,
+        ...values,
+      },
+    ]);
+  }, []);
 
   const deleteTask = useCallback((id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -70,30 +61,25 @@ export function useTasks() {
     );
   }, []);
 
-  const setTaskEnabled = useCallback((id: string, enabled: boolean) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, enabled } : t)),
-    );
-  }, []);
-
-  const setTaskCategory = useCallback((id: string, category: Category) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, category, schedule: null } : t,
-      ),
-    );
-  }, []);
+  const updateTask = useCallback(
+    (id: string, patch: Partial<Omit<Task, "id">>) => {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+      );
+    },
+    [],
+  );
 
   return {
     tasks,
     remaining,
     weeklyRemaining,
+    biweeklyRemaining,
     monthlyRemaining,
     addTask,
     deleteTask,
     markDone,
     markUndone,
-    setTaskEnabled,
-    setTaskCategory,
+    updateTask,
   };
 }

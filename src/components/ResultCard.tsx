@@ -1,4 +1,5 @@
 import type { Task } from "../types";
+import { CATEGORY_LABELS } from "../lib/scheduleLabel";
 
 type Props = {
   task: Task;
@@ -11,7 +12,7 @@ export function ResultCard({ task, isPriority, onDo, onSkip }: Props) {
   return (
     <div className="result-card">
       <span className={`badge badge-${task.category}`}>
-        {task.category === "weekly" ? "週1" : "月1"}
+        {CATEGORY_LABELS[task.category]}
       </span>
       {isPriority && <span className="badge badge-priority">優先</span>}
       <h2 className="result-name">{task.name}</h2>

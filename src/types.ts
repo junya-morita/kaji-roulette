@@ -1,4 +1,4 @@
-export type Category = "weekly" | "monthly";
+export type Category = "weekly" | "biweekly" | "monthly";
 
 export type Schedule =
   | { type: "dayOfWeek"; dayOfWeek: number } // 週1用: 0=日〜6=土
@@ -15,3 +15,6 @@ export type Task = {
   estimatedMinutes: number;
   schedule: Schedule | null;
 };
+
+/** 追加/編集フォームが扱う入力値の形(追加時にはこの形のまま渡せる) */
+export type TaskFormValues = Omit<Task, "id" | "lastCompletedAt" | "enabled">;

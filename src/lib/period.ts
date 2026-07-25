@@ -14,12 +14,35 @@ export function getMonthStart(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-/** タスクが「今の期間(週 or 月)」で完了済みかどうか */
+// 隔週サイクルの固定基準(2024/1/1は月曜日)。ユーザーが起点を意識しなくてよいよう、
+// 全タスク共通でこの日から2週間ごとに区切る。
+const BIWEEKLY_REFERENCE_MONDAY = new Date(2024, 0, 1);
+
+/** その週を含む2週間サイクルの開始(1週目の月曜0:00)を返す */
+export function getBiweeklyPeriodStart(now: Date): Date {
+  const thisWeekStart = getWeekStart(now);
+  const weeksSince = Math.round(
+    (thisWeekStart.getTime() - BIWEEKLY_REFERENCE_MONDAY.getTime()) /
+      (7 * 24 * 60 * 60 * 1000),
+  );
+  const isSecondWeekOfCycle = ((weeksSince % 2) + 2) % 2 === 1;
+  if (!isSecondWeekOfCycle) return thisWeekStart;
+  const prevWeekStart = new Date(thisWeekStart);
+  prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+  return prevWeekStart;
+}
+
+function getPeriodStart(category: Task["category"], now: Date): Date {
+  if (category === "weekly") return getWeekStart(now);
+  if (category === "biweekly") return getBiweeklyPeriodStart(now);
+  return getMonthStart(now);
+}
+
+/** タスクが「今の期間(週・隔週・月)」で完了済みかどうか */
 export function isCompletedThisPeriod(task: Task, now: Date): boolean {
   if (!task.lastCompletedAt) return false;
   const completedAt = new Date(task.lastCompletedAt);
-  const periodStart =
-    task.category === "weekly" ? getWeekStart(now) : getMonthStart(now);
+  const periodStart = getPeriodStart(task.category, now);
   return completedAt.getTime() >= periodStart.getTime();
 }
 
@@ -48,9 +71,13 @@ export function getScheduledDateInPeriod(task: Task, now: Date): Date | null {
   if (!schedule) return null;
 
   if (schedule.type === "dayOfWeek") {
-    const weekStart = getWeekStart(now);
+    // weekly/biweeklyで共有: biweeklyはサイクル1週目のその曜日を指す
+    const periodStart =
+      task.category === "biweekly"
+        ? getBiweeklyPeriodStart(now)
+        : getWeekStart(now);
     const offset = schedule.dayOfWeek === 0 ? 6 : schedule.dayOfWeek - 1;
-    const date = new Date(weekStart);
+    const date = new Date(periodStart);
     date.setDate(date.getDate() + offset);
     return date;
   }

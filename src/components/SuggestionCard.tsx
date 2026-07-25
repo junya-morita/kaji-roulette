@@ -1,4 +1,5 @@
 import type { Task } from "../types";
+import { CATEGORY_LABELS } from "../lib/scheduleLabel";
 
 type Props = {
   tasks: Task[];
@@ -27,10 +28,8 @@ export function SuggestionCard({
           <ul className="suggestion-list">
             {tasks.map((task) => (
               <li key={task.id} className="suggestion-list-item">
-                <span
-                  className={`badge ${task.category === "weekly" ? "badge-weekly" : "badge-monthly"}`}
-                >
-                  {task.category === "weekly" ? "週1" : "月1"}
+                <span className={`badge badge-${task.category}`}>
+                  {CATEGORY_LABELS[task.category]}
                 </span>
                 <span className="suggestion-item-name">{task.name}</span>
                 <span className="badge badge-time">

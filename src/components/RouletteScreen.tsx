@@ -16,6 +16,7 @@ import { suggestCombination } from "../lib/suggestion";
 type Props = {
   remaining: Task[];
   weeklyRemaining: Task[];
+  biweeklyRemaining: Task[];
   monthlyRemaining: Task[];
   markDone: (id: string) => void;
 };
@@ -23,6 +24,7 @@ type Props = {
 export function RouletteScreen({
   remaining,
   weeklyRemaining,
+  biweeklyRemaining,
   monthlyRemaining,
   markDone,
 }: Props) {
@@ -117,7 +119,9 @@ export function RouletteScreen({
     const categoryRemainingCount =
       selectedTask.category === "weekly"
         ? weeklyRemaining.length
-        : monthlyRemaining.length;
+        : selectedTask.category === "biweekly"
+          ? biweeklyRemaining.length
+          : monthlyRemaining.length;
 
     markDone(selectedTask.id);
     setMascotMessage(
@@ -183,8 +187,8 @@ export function RouletteScreen({
       </div>
 
       <p className="remaining-summary">
-        のこり{totalRemaining}件(週1:{weeklyRemaining.length} / 月1:
-        {monthlyRemaining.length})
+        のこり{totalRemaining}件(週1:{weeklyRemaining.length} / 隔週:
+        {biweeklyRemaining.length} / 月1:{monthlyRemaining.length})
       </p>
 
       {showRouletteBox && (

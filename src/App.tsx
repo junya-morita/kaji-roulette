@@ -10,13 +10,13 @@ function App() {
     tasks,
     remaining,
     weeklyRemaining,
+    biweeklyRemaining,
     monthlyRemaining,
     addTask,
     deleteTask,
     markDone,
     markUndone,
-    setTaskEnabled,
-    setTaskCategory,
+    updateTask,
   } = useTasks();
 
   return (
@@ -30,6 +30,7 @@ function App() {
           <RouletteScreen
             remaining={remaining}
             weeklyRemaining={weeklyRemaining}
+            biweeklyRemaining={biweeklyRemaining}
             monthlyRemaining={monthlyRemaining}
             markDone={markDone}
           />
@@ -40,8 +41,7 @@ function App() {
             deleteTask={deleteTask}
             markDone={markDone}
             markUndone={markUndone}
-            setTaskEnabled={setTaskEnabled}
-            setTaskCategory={setTaskCategory}
+            updateTask={updateTask}
           />
         )}
       </main>

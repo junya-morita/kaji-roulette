@@ -15,6 +15,7 @@
   --color-todo-text: #b56b2b;
   --color-priority: #c9942f;
   --color-time-badge: #b0a293;
+  --color-biweekly: #d97a9c;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -221,6 +222,10 @@ body {
   background: var(--color-weekly);
 }
 
+.badge-biweekly {
+  background: var(--color-biweekly);
+}
+
 .badge-monthly {
   background: var(--color-monthly);
 }
@@ -365,6 +370,10 @@ body {
   opacity: 0.55;
 }
 
+.task-item-editing {
+  display: block;
+}
+
 .empty-hint {
   color: var(--color-muted);
   font-size: 0.9rem;
@@ -382,10 +391,19 @@ body {
   margin: 0 0 10px;
 }
 
-.task-add-form form {
+.task-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.task-form-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.task-form-actions .btn {
+  flex: 1;
 }
 
 .form-field {
