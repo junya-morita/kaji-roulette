@@ -1,43 +1,104 @@
-import type { Task } from "../types";
+import type { Category, Schedule, Task } from "../types";
 
 function makeId(): string {
   return crypto.randomUUID();
 }
 
+type SeedTask = [
+  name: string,
+  description: string,
+  estimatedMinutes: number,
+  schedule?: Schedule,
+];
+
+function buildTasks(category: Category, seeds: SeedTask[]): Task[] {
+  return seeds.map(([name, description, estimatedMinutes, schedule]) => ({
+    id: makeId(),
+    name,
+    description,
+    category,
+    lastCompletedAt: null,
+    enabled: true,
+    estimatedMinutes,
+    schedule: schedule ?? null,
+  }));
+}
+
 export function createDefaultTasks(): Task[] {
-  const weekly: Array<[string, string, number]> = [
-    ["掃除機がけ", "リビング・寝室の床にざっと掃除機をかける", 15],
-    ["洗面台まわり掃除", "洗面台と鏡の水垢を拭き取る", 10],
-    ["キッチンシンク掃除", "シンクとその周りを洗って軽く磨く", 10],
-    ["ゴミの分別・まとめ", "各部屋のゴミをまとめて分別する", 5],
+  const weekly: SeedTask[] = [
+    ["枕カバー・シーツを洗う", "枕カバー・シーツを洗う", 60],
+    ["洗面所掃除", "洗面台・鏡・排水口の掃除", 10],
+    ["庭の雑草抜き", "雑草を抜く", 20],
+    ["窓の桟(内側)の掃除", "湊斗の手が届く窓の桟を掃除する", 10],
+    ["製氷機の掃除", "製氷機の掃除", 10],
+    ["家中の棚の埃を祓う", "家中の棚の埃を祓う", 10],
+    ["レシートの整理", "週に一度溜まったレシートを家計簿につける", 10],
+    ["紙ごみの処分", "紙ごみをまとめて処分する", 10],
+    ["布巾を洗う", "布巾を洗う", 15],
   ];
-  const monthly: Array<[string, string, number]> = [
-    ["換気扇の掃除", "キッチン換気扇のフィルターを外して洗う", 20],
-    ["シーツ・カバー交換", "ベッドのシーツと枕カバーを洗濯して交換する", 15],
-    ["冷蔵庫の中身整理", "賞味期限切れがないか確認して整理する", 15],
-    ["お風呂の排水口掃除", "浴室の排水口のヌメリ・髪の毛を掃除する", 10],
+
+  const biweekly: SeedTask[] = [
+    ["おもちゃを洗う(プラスチック・木製)", "おもちゃをキッチンで洗う", 30],
+    ["玄関・靴箱掃除", "玄関のほこり取り・靴箱整理", 15],
+    ["化粧道具を洗う", "化粧に使うスポンジ・筆などを洗う", 20],
+    ["洗剤類のストックをオンライン注文", "洗剤類のストックをオンライン注文", 15],
+    [
+      "食品の整理",
+      "食品庫にある食材の期限などを確認し、切れているものを処分する",
+      30,
+    ],
+    ["おもちゃを洗う(布製)", "布製のおもちゃを中性洗剤で手洗いして干す", 60],
+    ["キッチンの棚の掃除", "汚れを取り除く", 15],
+    ["キッチンの棚を拭く", "キッチンの棚を拭く", 15],
+  ];
+
+  const monthly: SeedTask[] = [
+    [
+      "燃やさないゴミをまとめる",
+      "燃やさないゴミ(オレンジ色の袋)で捨てるアイテムを探して袋に詰める。袋がいっぱいになったらゴミ捨て場に持って行く。",
+      30,
+    ],
+    [
+      "キッチンを丸ごとキレイに",
+      "シンク周り(カゴの下含む)の水垢などをキレイにする。コンロ周りをキレイにする。",
+      30,
+    ],
+    [
+      "冷蔵庫掃除",
+      "冷蔵庫の賞味期限切れ食材を処分し、液だれや土などをキレイに掃除する。",
+      60,
+    ],
+    ["窓・網戸拭き", "窓ガラス・サッシ・網戸の拭き掃除", 30],
+    ["換気扇・レンジフード掃除", "油汚れのふき取り・フィルター清掃", 30],
+    ["エアコンフィルター掃除", "フィルターのほこり除去", 15],
+    ["洗濯槽クリーナー掃除", "洗濯槽のカビ・汚れ除去", 30],
+    ["ベビー服のサイズアウト整理", "着られなくなった服の仕分け・収納", 30],
+    ["ベビーカー・チャイルドシート拭き掃除", "汚れ・食べこぼしの拭き取り", 20],
+    ["行政手続き書類の整理", "児童手当・医療証等の確認・提出管理", 20],
+    [
+      "捨て難いものを処分",
+      "処理の方法に困っていたりしたものの処分方法を調べて捨てる",
+      30,
+    ],
+    ["メルカリ出品", "メルカリに出そうと思っていて貯めていたものを出品", 60],
+    ["庭の芝刈り", "芝刈りをする", 60],
+    [
+      "スポンジを取り替える",
+      "スポンジを取り替える",
+      5,
+      { type: "dayOfMonth", dayOfMonth: 1 },
+    ],
+    [
+      "除湿剤の確認",
+      "水の溜まり具合を確認する。溜まっていたら水を捨てて、新しいものに交換する。",
+      30,
+    ],
+    ["掃除機の掃除", "ルンバ・シャークのお掃除をしてあげる", 30],
   ];
 
   return [
-    ...weekly.map(([name, description, estimatedMinutes]) => ({
-      id: makeId(),
-      name,
-      description,
-      category: "weekly" as const,
-      lastCompletedAt: null,
-      enabled: true,
-      estimatedMinutes,
-      schedule: null,
-    })),
-    ...monthly.map(([name, description, estimatedMinutes]) => ({
-      id: makeId(),
-      name,
-      description,
-      category: "monthly" as const,
-      lastCompletedAt: null,
-      enabled: true,
-      estimatedMinutes,
-      schedule: null,
-    })),
+    ...buildTasks("weekly", weekly),
+    ...buildTasks("biweekly", biweekly),
+    ...buildTasks("monthly", monthly),
   ];
 }
